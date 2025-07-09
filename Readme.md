@@ -23,32 +23,11 @@ This tool supports redaction of text content from PDF files. It searches for spe
 To use this script, you need to have Python installed on your system along with the required dependencies.
 
 1. Clone this repository or copy the script to your local machine:
-
    ```bash
-   git clone <repository-url>
-   cd <repository-folder># Redact PDF Tool
-
-This tool provides redaction and compression capabilities for PDF files using PyMuPDF and PikePDF. It searches for specific text in a PDF document, replaces it with a replacement string, applies redaction, and saves the updated document. Additionally, the modified PDF is compressed for optimization.
-
-## Features
-- Search and redact specific text in PDF files.
-- Replace the redacted text with customizable replacement strings.
-- Compress the redacted PDF for smaller file size.
-
-## Installation
-To use this script, you need to have Python installed on your system along with the required dependencies.
-
-1. Clone this repository or copy the script to your local machine:
-   ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone https://github.com/79man/redact_pdf
+   cd redact_pdf
    ```
 2. Install the dependencies using pip:
-
-    ```bash
-    pip install pymupdf pikepdf
-    ```
-    or
     ```bash
     pip install -r requirements.txt
     ```
@@ -76,9 +55,11 @@ python redact_pdf_tool.py input.pdf redacted_output.pdf "sensitive_text" "REDACT
 - `redacted_output.pdf_compressed.pdf`: A compressed version of the redacted PDF for optimized size.
 
 ## Example Output Logs
-```plaintext
-Redaction complete. Saved as 'redacted_output.pdf'.
-PDF compression complete. Saved as 'redacted_output.pdf_compressed.pdf'.
+```bash
+$ python redact_pdf.py input_test.pdf output_test.pdf "Sensitive Text" "----"
+Redacting: 100%|████████████████████████████████████████████████| 102/102 [00:01<00:00, 70.50page/s]
+PDF Redaction Completed.
+PDF compression complete. Final file saved as 'output_test.pdf'.
 ```
 
 ## Notes
@@ -92,11 +73,3 @@ The script uses the following Python libraries:
 - [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/en/latest/) - Handles PDF reading, text searching, and redaction.
 - [PikePDF](https://pikepdf.readthedocs.io/en/latest/) - Used for compressing the pdf output.
 
-Install them with:
-```bash
-pip install pymupdf pikepdf
-```
-or
-```bash
-pip install -r requirements.txt
-```
