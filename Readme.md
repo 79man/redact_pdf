@@ -7,8 +7,8 @@ This tool supports redaction of text content from PDF files. It searches for spe
   - [Installation](#installation)
   - [Usage](#usage)
   - [Example Command](#example-command)
-  - [Arguments](#arguments)
-  - [Output](#output)
+    - [Arguments](#arguments)
+    - [Output](#output)
   - [Example Output Logs](#example-output-logs)
   - [Notes](#notes)
   - [Dependencies](#dependencies)
@@ -22,7 +22,7 @@ This tool supports redaction of text content from PDF files. It searches for spe
 ## Installation
 To use this script, you need to have Python installed on your system along with the required dependencies.
 
-1. Clone this repository or copy the script to your local machine:
+1. Clone this repository:
    ```bash
    git clone https://github.com/79man/redact_pdf
    cd redact_pdf
@@ -41,25 +41,35 @@ The script can be run via the command-line interface. The following arguments ar
 
 ## Example Command
 ```bash
-python redact_pdf_tool.py input.pdf redacted_output.pdf "sensitive_text" "REDACTED"
+# Search all email addresses in input_test.pdf and replace with ***REDACTED***
+python redact_pdf.py -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
 ```
 
-## Arguments
-- `input.pdf`: The source PDF file containing the text.
-- `redacted_output.pdf`: The name of the file to which the redacted PDF will be saved.
-- `sensitive_text`: Text to search for in the PDF document to be redacted.
-- `REDACTED`: The replacement text that will replace the redacted area.
+### Arguments
+```
+  -h, --help            show this help message and exit
+  -i SRC_FILE, --src_file SRC_FILE
+                        Path to the source PDF file.
+  -o OUTPUT_FILE, --output_file OUTPUT_FILE
+                        Path to save the output PDF.
+  -s SEARCHES [SEARCHES ...], --searches SEARCHES [SEARCHES ...]
+                        Text to redact (multiple values allowed). Regex format is also allowed
+  -c, --ignore-case     Enable case-insensitive search for redaction, default=[False]
+  -r REPLACEMENT, --replacement REPLACEMENT
+                        Replacement text for redacted content. Leave empty for no replacement.
+  -v, --verbose         Increase output Verbosity, default=[False]
+  -f, --overwrite       Overwrite destination PDF if it alreday exists, default=[False]
+```
 
-## Output
+### Output
 - `redacted_output.pdf`: The redacted PDF file.
-- `redacted_output.pdf_compressed.pdf`: A compressed version of the redacted PDF for optimized size.
 
 ## Example Output Logs
 ```bash
-$ python redact_pdf.py input_test.pdf output_test.pdf "Sensitive Text" "----"
+$ python redact_pdf.py -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
 Redacting: 100%|████████████████████████████████████████████████| 102/102 [00:01<00:00, 70.50page/s]
 PDF Redaction Completed.
-PDF compression complete. Final file saved as 'output_test.pdf'.
+PDF compression complete. Final file saved as 'redacted_output.pdf'.
 ```
 
 ## Notes
