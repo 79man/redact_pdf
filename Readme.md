@@ -1,11 +1,12 @@
-# Redact PDF Tool
+# PDF Redacter Tool
 
-This tool supports redaction of text content from PDF files. It searches for specific text in a PDF document, replaces it with a replacement string, applies redaction, and saves the updated document. Additionally, the modified PDF is compressed for size optimization.
+This package supports redaction of text content from PDF files. It searches for specific text in a PDF document, replaces it with a replacement string, applies redaction, and saves the updated document. Additionally, the modified PDF is compressed for size optimization.
 
-- [Redact PDF Tool](#redact-pdf-tool)
+- [PDF Redacter Tool](#pdf-redacter-tool)
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
+    - [Command Syntax](#command-syntax)
   - [Example Command](#example-command)
     - [Arguments](#arguments)
     - [Output](#output)
@@ -29,34 +30,36 @@ To use this script, you need to have Python installed on your system along with 
    ```
 2. Install the dependencies using pip:
     ```bash
-    pip install -r requirements.txt
+    pip install .
     ```
 
 ## Usage
-The script can be run via the command-line interface. The following arguments are required:
-- `src_file`: The source PDF file you want to redact.
-- `dest_file`: The destination file to save the redacted PDF.
-- `needle`: The text you want to search for and redact.
-- `replacement`: The text that will replace the redacted text.
+The tool exposes a CLI command named pdf_redacter. Use this command to process PDF files via the command line.
+
+### Command Syntax
+```shell
+pdf_redacter -i SRC_FILE -o OUTPUT_FILE -s SEARCHES [SEARCHES ...] [-c] [-r REPLACEMENT] [-v] [-f]
+```
 
 ## Example Command
 ```bash
-# Search all email addresses in input_test.pdf and replace with ***REDACTED***
-python redact_pdf.py -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
+# The following example redacts all email addresses from input_test.pdf and saves the compressed redacted version in redacted_output.pdf:
+
+pdf_redacter -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
 ```
 
 ### Arguments
-```
+```shell
   -h, --help            show this help message and exit
   -i SRC_FILE, --src_file SRC_FILE
-                        Path to the source PDF file.
+                        Path to the source PDF file. (Required)
   -o OUTPUT_FILE, --output_file OUTPUT_FILE
-                        Path to save the output PDF.
+                        Path to save the output PDF. (Required)
   -s SEARCHES [SEARCHES ...], --searches SEARCHES [SEARCHES ...]
-                        Text to redact (multiple values allowed). Regex format is also allowed
+                        Text to redact (multiple values allowed). Regex format is also allowed. (Required)
   -c, --ignore-case     Enable case-insensitive search for redaction, default=[False]
   -r REPLACEMENT, --replacement REPLACEMENT
-                        Replacement text for redacted content. Leave empty for no replacement.
+                        Replacement text for redacted content. default=[***REDACTED***]
   -v, --verbose         Increase output Verbosity, default=[False]
   -f, --overwrite       Overwrite destination PDF if it alreday exists, default=[False]
 ```
@@ -66,10 +69,14 @@ python redact_pdf.py -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+
 
 ## Example Output Logs
 ```bash
-$ python redact_pdf.py -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
-Redacting: 100%|████████████████████████████████████████████████| 102/102 [00:01<00:00, 70.50page/s]
-PDF Redaction Completed.
-PDF compression complete. Final file saved as 'redacted_output.pdf'.
+pdf_redacter -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}" -v -f
+```
+```log
+INFO - YYYY-MM-DD HH:MM:SS,msec : Namespace(src_file='input_test.pdf', output_file='output_test.pdf', searches=['[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}'], ignore_case=False, replacement='***REDACTED***', verbose=True, overwrite=True)
+INFO - YYYY-MM-DD HH:MM:SS,msec : Regex patterns: [re.compile('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}')]
+Redacting: 100%|████████████████████████████████████████████████████████| 102/102 [00:01<00:00, 55.27page/s]
+INFO - YYYY-MM-DD HH:MM:SS,msec : PDF Redaction Completed.
+INFO - YYYY-MM-DD HH:MM:SS,msec : PDF compression complete. Final file saved as 'output_test.pdf'.
 ```
 
 ## Notes
@@ -78,7 +85,7 @@ PDF compression complete. Final file saved as 'redacted_output.pdf'.
 - This redaction method only works for redacting text content in PDFs.
 
 ## Dependencies
-The script uses the following Python libraries:
+This package uses the following Python libraries:
 
 - [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/en/latest/) - Handles PDF reading, text searching, and redaction.
 - [PikePDF](https://pikepdf.readthedocs.io/en/latest/) - Used for compressing the pdf output.
