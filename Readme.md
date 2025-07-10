@@ -62,6 +62,10 @@ pdf_redacter -i input_test.pdf -o redacted_output.pdf -s "[A-Za-z0-9._%+-]+@[A-Z
                         Replacement text for redacted content. default=[***REDACTED***]
   -v, --verbose         Increase output Verbosity, default=[False]
   -f, --overwrite       Overwrite destination PDF if it alreday exists, default=[False]
+  -P [{email,phone,ssn,credit_card} ...], --predefined-patterns [{email,phone,ssn,credit_card} ...]
+                        Use predefined patterns for common redaction scenarios
+  --validate-patterns   Validate regex patterns before processing (default: True)
+  -d, --pattern-info    Show stats about matched patterns before exit
 ```
 
 ### Output

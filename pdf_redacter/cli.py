@@ -3,11 +3,13 @@ import sys
 import argparse
 from typing import Final
 from pdf_redacter.core import PDFRedactor
+from pdf_redacter.pattern_matcher import PatternType
 
 DEFAULT_REPLACEMENT: Final = "***REDACTED***"
 DEFAULT_IGN_CASE: Final = False
 DEFAULT_VERBOSE: Final = False
 DEFAULT_OVERWRITE: Final = False
+
 
 def main():
     """
@@ -36,9 +38,8 @@ def main():
     parser.add_argument(
         "-s", "--searches",
         nargs="+",
-        required=True,
         type=str,
-        help="Text to redact (multiple values allowed). Regex format is also allowed. (Required)"
+        help="Text to redact (multiple values allowed). Regex format is also allowed. (Optional)"
     )
 
     # Flag for case-insensitive search
@@ -71,24 +72,45 @@ def main():
         help=f"Overwrite destination PDF if it alreday exists, default=[{DEFAULT_OVERWRITE}]"
     )
 
+    # Add to argument parser in cli.py
+    parser.add_argument(
+        "-P", "--predefined-patterns",
+        nargs="*",
+        choices=["email", "phone", "ssn", "credit_card"],
+        help="Use predefined patterns for common redaction scenarios"
+    )
+
+    parser.add_argument(
+        "--validate-patterns",
+        action="store_true",
+        default=True,
+        help="Validate regex patterns before processing (default: True)"
+    )
+
+    parser.add_argument(
+        "-d", "--pattern-info",
+        action="store_true",
+        help="Show stats about matched patterns before exit"
+    )
+
     # Parse arguments
     args = parser.parse_args()
 
-    if args.verbose:        
+    if args.verbose:
         # Increase log levels
         logging.basicConfig(
             level=logging.DEBUG,
             format="%(levelname)s - %(asctime)s : %(message)s"
         )
-    else:        
+    else:
         logging.basicConfig(
-            level=logging.WARNING,  # Set logging level to INFO
+            level=logging.INFO,  # Set logging level to INFO
             format="%(levelname)s - %(asctime)s : %(message)s"
         )
 
-    # Create a logger    
+    # Create a logger
     logger = logging.getLogger(__name__)
-    logger.info(args)
+    logger.debug(args)
 
     # Run the redaction process
     try:
@@ -97,12 +119,17 @@ def main():
             dest_file=args.output_file,
             overwrite=args.overwrite
         )
-        pdf_redactor_engine.redact_pdf(            
+        stats = pdf_redactor_engine.redact_pdf(
             needles=args.searches,
             replacement=args.replacement,
-            ignore_case=args.ignore_case            
-        )
-        
+            ignore_case=args.ignore_case,            
+            use_predefined_patterns=[PatternType(p) for p in (args.predefined_patterns or [])],
+            validate_patterns=args.validate_patterns
+        )       
+
+        if stats and args.pattern_info:
+            logger.info(stats)
+
     except Exception as e:
         logger.exception(f"An error occurred: {str(e)}")
         sys.exit(1)
