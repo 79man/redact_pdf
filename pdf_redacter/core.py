@@ -51,7 +51,7 @@ class PDFRedactor:
             needles: List[str],
             replacement: str,
             ignore_case: bool,
-            use_predefined_patterns: Optional[List[PatternType]] = None,
+            predefined_patterns: Optional[List[PatternType]] = None,
             validate_patterns: bool = True
     ) -> dict | None:
         """
@@ -64,7 +64,7 @@ class PDFRedactor:
                 needles (list): List of strings or regex patterns to match text for redaction.
                 replacement (str): The string to replace matched text (defaults to an empty string).
                 ignore_case (bool): Whether the search for patterns should be case-insensitive.
-                use_predefined_patterns Optional[List[PatternType]]: Support for Pattern Templates for commonly used patterns
+                predefined_patterns Optional[List[PatternType]]: Support for Pattern Templates for commonly used patterns
                 validate_patterns (bool): Enforce pattern validation.
         """
 
@@ -80,8 +80,8 @@ class PDFRedactor:
                 return None
 
         # Add predefined patterns (if specified)
-        if use_predefined_patterns:
-            for pattern_type in use_predefined_patterns:
+        if predefined_patterns:
+            for pattern_type in predefined_patterns:
                 try:
                     pattern_matcher.add_predefined_pattern(
                         pattern_type,
@@ -118,6 +118,7 @@ class PDFRedactor:
         stats = {
             "total_matches": 0,
             "pages_processed": 0,
+            "pages_modified": 0,
             "patterns_used": len(pattern_info),
             "matches_by_pattern": {}
         }
@@ -156,13 +157,17 @@ class PDFRedactor:
                         page.add_redact_annot(
                             inst, replacement, fill=(1, 1, 1))
 
-                # Apply the redactions
-                page.apply_redactions()
+                # Only apply redactions if there were matches on this page  
+                if page_matches > 0:  
+                    page.apply_redactions()  
+                    stats["pages_modified"] += 1
+                    # logger.debug(f"Page {page_num + 1}: Applied {page_matches} redactions")
+                
                 stats["pages_processed"] += 1
 
-                if page_matches > 0:
-                    logger.debug(
-                        f"Page {page_num + 1}: {page_matches} matches found")
+                # if page_matches > 0:
+                #     logger.debug(
+                #         f"Page {page_num + 1}: {page_matches} matches found")
 
             # Save the modified PDF to a temporary file
             temp_file = f"{self.dest_file}_temp.pdf"

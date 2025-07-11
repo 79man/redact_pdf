@@ -1,139 +1,146 @@
 import logging
 import sys
 import argparse
-from typing import Final
+from typing import Final, Optional, Dict, Any
 from pdf_redacter.core import PDFRedactor
 from pdf_redacter.pattern_matcher import PatternType
-
-DEFAULT_REPLACEMENT: Final = "***REDACTED***"
-DEFAULT_IGN_CASE: Final = False
-DEFAULT_VERBOSE: Final = False
-DEFAULT_OVERWRITE: Final = False
+from pdf_redacter.config import ConfigLoader
+from pdf_redacter.args_processor import ArgsProcessor
 
 
-def main():
-    """
-    Entry point for the PDF Redacter CLI.
-    """
-    # Create argument parser
-    parser = argparse.ArgumentParser(
-        description="A tool to redact text in PDFs with support for case-insensitive and regex searches."
-    )
+class PdfRedacterCLI:
 
-    # Input and output file arguments
-    parser.add_argument(
-        "-i", "--src_file",
-        required=True,
-        type=str,
-        help="Path to the source PDF file. (Required)"
-    )
-    parser.add_argument(
-        "-o", "--output_file",
-        required=True,
-        type=str,
-        help="Path to save the output PDF. (Required)"
-    )
+    @staticmethod
+    def main():
+        """
+        Entry point for the PDF Redacter CLI.
+        """
 
-    # Text to search and replace
-    parser.add_argument(
-        "-s", "--searches",
-        nargs="+",
-        type=str,
-        help="Text to redact (multiple values allowed). Regex format is also allowed. (Optional)"
-    )
+        parser = ArgsProcessor.generate_argument_parser()
+        # Parse arguments
+        args: argparse.Namespace = parser.parse_args()
 
-    # Flag for case-insensitive search
-    parser.add_argument(
-        "-c", "--ignore-case",
-        action="store_true",
-        default=DEFAULT_IGN_CASE,
-        help=f"Enable case-insensitive search for redaction, default=[{DEFAULT_IGN_CASE}]"
-    )
+        if args.verbose:
+            print("Setting log levels to DEBUG")
+            # Increase log levels
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format="%(levelname)s - %(asctime)s : %(message)s"
+            )
 
-    parser.add_argument(
-        "-r", "--replacement",
-        type=str,
-        action="store",
-        default=DEFAULT_REPLACEMENT,
-        help=f"Replacement text for redacted content. default=[{DEFAULT_REPLACEMENT}]"
-    )
+        final_config = ArgsProcessor.load_configuration(args)
 
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        default=DEFAULT_VERBOSE,
-        help=f"Increase output Verbosity, default=[{DEFAULT_VERBOSE}]"
-    )
+        if not args.verbose and final_config.get('verbose', False):
+            print("Setting log levels to DEBUG")
+            # Increase log levels
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format="%(levelname)s - %(asctime)s : %(message)s"
+            )
+        else:
+            # print("Setting log levels to INFO")
+            logging.basicConfig(
+                level=logging.INFO,  # Set logging level to INFO
+                format="%(levelname)s - %(asctime)s : %(message)s"
+            )
 
-    parser.add_argument(
-        "-f", "--overwrite",
-        action="store_true",
-        default=DEFAULT_OVERWRITE,
-        help=f"Overwrite destination PDF if it alreday exists, default=[{DEFAULT_OVERWRITE}]"
-    )
+        # Create a logger
+        logger = logging.getLogger(__name__)
+        logger.debug(args)
 
-    # Add to argument parser in cli.py
-    parser.add_argument(
-        "-P", "--predefined-patterns",
-        nargs="*",
-        choices=["email", "phone", "ssn", "credit_card"],
-        help="Use predefined patterns for common redaction scenarios"
-    )
+        if final_config:
+            # Handle config generation
+            if final_config.get('generate_sample_config', False):
+                ConfigLoader.generate_sample_config(
+                    args.generate_sample_config)
+                return
 
-    parser.add_argument(
-        "--validate-patterns",
-        action="store_true",
-        default=True,
-        help="Validate regex patterns before processing (default: True)"
-    )
+            # Run redaction with merged config
+            if not final_config.get('dry_run', False):
+                # Perfomr redaction if not dry_run mode
+                PdfRedacterCLI.run_redaction(final_config)
+            else:
+                logger.info("Dry Run successful")
+                logger.debug(final_config)
 
-    parser.add_argument(
-        "-d", "--pattern-info",
-        action="store_true",
-        help="Show stats about matched patterns before exit"
-    )
+            # Save configuration to specified file
+            if final_config.get('save_config', None):
+                ConfigLoader.save_config(
+                    final_config,
+                    str(final_config.get('save_config'))
+                )
+        else:
+            logger.error("Invalid configuartion. Exiting...")
 
-    # Parse arguments
-    args = parser.parse_args()
+    @staticmethod
+    def run_redaction(
+        final_config: Dict[str, Any]
+    ) -> None:
+        """  
+        Execute PDF redaction using the merged configuration.  
 
-    if args.verbose:
-        # Increase log levels
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(levelname)s - %(asctime)s : %(message)s"
-        )
-    else:
-        logging.basicConfig(
-            level=logging.INFO,  # Set logging level to INFO
-            format="%(levelname)s - %(asctime)s : %(message)s"
-        )
+        Args:  
+            final_config: Dictionary containing all configuration parameters  
+        """
+        logger = logging.getLogger(__name__)
 
-    # Create a logger
-    logger = logging.getLogger(__name__)
-    logger.debug(args)
+        try:
+            # Create PDFRedactor instance
+            pdf_redactor_engine = PDFRedactor(
+                src_file=final_config['src_file'],
+                dest_file=final_config['output_file'],
+                overwrite=final_config.get('overwrite', False)
+            )
 
-    # Run the redaction process
-    try:
-        pdf_redactor_engine = PDFRedactor(
-            src_file=args.src_file,
-            dest_file=args.output_file,
-            overwrite=args.overwrite
-        )
-        stats = pdf_redactor_engine.redact_pdf(
-            needles=args.searches,
-            replacement=args.replacement,
-            ignore_case=args.ignore_case,            
-            use_predefined_patterns=[PatternType(p) for p in (args.predefined_patterns or [])],
-            validate_patterns=args.validate_patterns
-        )       
+            # Prepare arguments for redact_pdf method
+            redaction_args = {
+                'needles': final_config['searches'],
+                'replacement': final_config.get('replacement', '***REDACTED***'),
+                'ignore_case': final_config.get('ignore_case', False)
+            }
 
-        if stats and args.pattern_info:
-            logger.info(stats)
+            # Add enhanced pattern matching arguments if available
+            if 'predefined_patterns' in final_config \
+                    and final_config['predefined_patterns']:
+                # Convert string patterns to PatternType enum values
+                predefined_types = [PatternType(
+                    pattern_name) for pattern_name in final_config['predefined_patterns']]
+                redaction_args['predefined_patterns'] = predefined_types
 
-    except Exception as e:
-        logger.exception(f"An error occurred: {str(e)}")
-        sys.exit(1)
+            # Execute redaction
+            result = pdf_redactor_engine.redact_pdf(**redaction_args)
+
+            # Handle result based on enhanced vs original implementation
+            if final_config.get('print_stats', False) and isinstance(result, dict):
+                # Enhanced implementation returns statistics
+                logger.info(f"Redaction completed successfully:")
+                logger.info(f"  - Total matches: {result['total_matches']}")
+                logger.info(
+                    f"  - Pages processed: {result['pages_processed']}")
+                logger.info(f"  - Pages modified: {result['pages_modified']}")
+                logger.info(f"  - Patterns used: {result['patterns_used']}")
+
+                if result['matches_by_pattern']:
+                    logger.info("  - Matches by pattern:")
+                    for pattern, count in result['matches_by_pattern'].items():
+                        logger.info(f"    * {pattern}: {count} matches")
+            else:
+                # Original implementation returns None on success
+                logger.info("PDF redaction completed successfully")
+
+        except FileNotFoundError as e:
+            logger.error(f"File not found: {e}")
+            sys.exit(1)
+        except FileExistsError as e:
+            logger.error(f"File already exists: {e}")
+            sys.exit(1)
+        except ValueError as e:
+            logger.error(f"Invalid configuration: {e}")
+            sys.exit(1)
+        except Exception as e:
+            logger.exception(f"An error occurred during redaction: {str(e)}")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    PdfRedacterCLI.main()

@@ -12,10 +12,11 @@ setup(
         "PyMuPDF",
         "pikepdf",
         "tqdm",
+        "pyyaml"
     ],
     entry_points={
         "console_scripts": [
-            "pdf_redacter=pdf_redacter.cli:main",  # Register `main` as the CLI entry point
+            "pdf_redacter=pdf_redacter.cli:PdfRedacterCLI.main",  # Register `main` as the CLI entry point
         ],
     },
 )
