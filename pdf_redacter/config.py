@@ -92,16 +92,17 @@ class ConfigLoader:
     @staticmethod
     def save_config(
             config_to_save: Union[Dict[str, Any], RedactionConfig],
-            save_path: str) -> None:
+            save_path: str) -> bool:
         if isinstance(config_to_save, RedactionConfig):
             ConfigLoader.__save_redaction_config(config_to_save, save_path)
         elif isinstance(config_to_save, dict):
             ConfigLoader.__save_dict_config(config_to_save, save_path)
         else:
             raise TypeError("Unsupported config type")
+        return True
 
     @staticmethod
-    def generate_sample_config(config_path: str) -> None:
+    def generate_sample_config(config_path: str) -> bool:
         """Generate a sample configuration file."""
         sample_config = RedactionConfig(
             searches=["email@example.com", r"\b\d{3}-\d{2}-\d{4}\b"],

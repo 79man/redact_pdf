@@ -172,8 +172,9 @@ class ArgsProcessor:
 
         # Get all argument attributes from args namespace
         all_args = vars(args)
-        all_args.pop('_explicitly_provided')
-        
+        if '_explicitly_provided' in all_args:
+            all_args.pop('_explicitly_provided')
+
         for key, value in all_args.items():
             if (key in explicitly_provided or key not in final_config) and value is not None:
                 final_config[key] = value
@@ -203,6 +204,9 @@ class ArgsProcessor:
 
     @staticmethod
     def __validate_configuration(final_config: Dict[str, Any]) -> None:
+
+        if final_config.get('generate_sample_config'):
+            return
 
         import sys
         # Validate required fields

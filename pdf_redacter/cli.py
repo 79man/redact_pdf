@@ -46,14 +46,18 @@ class PdfRedacterCLI:
 
         # Create a logger
         logger = logging.getLogger(__name__)
-        logger.debug(args)
+        # logger.debug(args)
+
+        logger.info(f"final_config in cli: {final_config}")
 
         if final_config:
-            # Handle config generation
-            if final_config.get('generate_sample_config', False):
+            # Handle config generation            
+            if final_config.get('generate_sample_config'):                
                 ConfigLoader.generate_sample_config(
-                    args.generate_sample_config)
-                return
+                    str(final_config.get('generate_sample_config'))
+                )
+                logger.info(f"Saved config to {final_config.get('generate_sample_config')}")
+                sys.exit(0)
 
             # Run redaction with merged config
             if not final_config.get('dry_run', False):
@@ -94,7 +98,7 @@ class PdfRedacterCLI:
 
             # Prepare arguments for redact_pdf method
             redaction_args = {
-                'needles': final_config.get('searches',None),
+                'needles': final_config.get('searches', None),
                 'replacement': final_config.get('replacement', '***REDACTED***'),
                 'ignore_case': final_config.get('ignore_case', False)
             }
@@ -109,6 +113,10 @@ class PdfRedacterCLI:
 
             # Execute redaction
             result = pdf_redactor_engine.redact_pdf(**redaction_args)
+
+            if not result:
+                logger.error(f"Redaction Failed")
+                sys.exit(1)
 
             # Handle result based on enhanced vs original implementation
             if final_config.get('print_stats', False) and isinstance(result, dict):

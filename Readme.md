@@ -20,6 +20,14 @@ This package supports redaction of text content from PDF files. It searches for 
   - [Example Output Logs](#example-output-logs)
   - [Notes](#notes)
   - [Dependencies](#dependencies)
+  - [Testing](#testing)
+    - [Test Structure](#test-structure)
+    - [Running Tests](#running-tests)
+    - [Test Dependencies](#test-dependencies)
+    - [Test Coverage](#test-coverage)
+    - [Writing New Tests](#writing-new-tests)
+  - [Notes](#notes-1)
+    - [Wiki pages you might want to explore:](#wiki-pages-you-might-want-to-explore)
 
 
 ## Features
@@ -214,3 +222,69 @@ This package depends on the following Python libraries for PDF Manipulation:
 
 - [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/en/latest/) - Handles PDF reading, text searching, and redaction.
 - [PikePDF](https://pikepdf.readthedocs.io/en/latest/) - Used for compressing the pdf output.
+
+## Testing
+`pdf_redacter` includes comprehensive test coverage using pytest to ensure reliability and correctness of PDF redaction functionality.
+
+### Test Structure
+The testing suite covers:
+
+- **Core functionality**: PDF redaction, pattern matching, and file handling
+- **CLI interface**: Command-line argument parsing and execution
+- **Configuration system**: YAML/JSON config file loading and validation
+- **Enhanced features**: Predefined patterns, pattern validation, and statistics tracking
+- **Error handling**: Invalid inputs, file permissions, and edge cases
+
+### Running Tests
+Install the package with test dependencies:
+
+```bash
+# Install with test dependencies  
+pip install -e ".[test]"  
+  
+# Run all tests  
+pytest  
+  
+# Run with coverage report  
+pytest --cov=pdf_redacter  
+  
+# Run specific test categories  
+pytest tests/test_core.py -v          # Core PDF processing tests  
+pytest tests/test_cli.py -v           # CLI interface tests  
+pytest tests/test_config.py -v        # Configuration system tests  
+  
+# Run tests with verbose output  
+pytest -v --tb=short
+```
+
+### Test Dependencies
+The testing framework requires additional dependencies that are automatically installed with the `[test]` extra:
+
+- `pytest>=6.0` - Testing framework
+- `pytest-cov` - Coverage reporting
+- `pytest-mock` - Mocking utilities
+
+### Test Coverage
+The test suite includes:
+
+- **Unit tests** for individual components and methods
+- **Integration tests** for end-to-end workflows
+- **Parametrized tests** for multiple pattern combinations
+- **Fixture-based testing** for PDF file creation and cleanup
+- **Mock testing** for CLI interface without actual file processing
+
+### Writing New Tests
+When contributing new features:
+
+1. Add corresponding test cases in the appropriate test_*.py file
+2. Use the provided fixtures for PDF creation and temporary directories
+3. Follow the existing parametrized testing patterns for multiple scenarios
+4. Ensure both positive and negative test cases are covered
+
+This testing infrastructure ensures the reliability of the PDF redaction functionality across different use cases and environments.
+
+## Notes
+This testing documentation reflects the comprehensive pytest implementation discussed in the conversation history, including the test structure with conftest.py fixtures, parametrized testing for pattern matching, CLI mocking, and the resolution of PyMuPDF SWIG warnings. The section emphasizes the practical aspects users need to know for running and contributing to the tests.
+
+### Wiki pages you might want to explore:
+[Deepwiki User Guide (79man/redact_pdf)](https://deepwiki.com/79man/redact_pdf/2-user-guide)
