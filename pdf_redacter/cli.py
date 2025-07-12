@@ -87,14 +87,14 @@ class PdfRedacterCLI:
         try:
             # Create PDFRedactor instance
             pdf_redactor_engine = PDFRedactor(
-                src_file=final_config['src_file'],
-                dest_file=final_config['output_file'],
+                src_file=str(final_config.get('src_file', None)),
+                dest_file=str(final_config.get('output_file', None)),
                 overwrite=final_config.get('overwrite', False)
             )
 
             # Prepare arguments for redact_pdf method
             redaction_args = {
-                'needles': final_config['searches'],
+                'needles': final_config.get('searches',None),
                 'replacement': final_config.get('replacement', '***REDACTED***'),
                 'ignore_case': final_config.get('ignore_case', False)
             }

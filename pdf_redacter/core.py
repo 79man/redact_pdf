@@ -3,6 +3,8 @@ import os
 from pdf_redacter.pattern_matcher import EnhancedPatternMatcher, PatternType
 import fitz  # PyMuPDF
 import pikepdf
+import tempfile
+from pathlib import Path
 
 from tqdm import tqdm
 from typing import List, Optional
@@ -37,9 +39,13 @@ class PDFRedactor:
 
     def _validate_paths(self):
         """Check the validity of input and output file paths."""
-        if not os.path.isfile(self.src_file):
+        if not self.src_file or not os.path.isfile(self.src_file):
             logger.error(f"Source file '{self.src_file}' not found")
             raise FileNotFoundError(f"Source file '{self.src_file}' not found")
+
+        if not self.dest_file:
+            logger.error(f"Valid Destination file not specified")
+            raise FileNotFoundError(f"Valid Destination file not specified")
 
         if not self.overwrite and os.path.exists(self.dest_file):
             logger.error(f"Destination file '{self.dest_file}' already exists")
@@ -69,7 +75,7 @@ class PDFRedactor:
         """
 
         # Initialize enhanced pattern matcher
-        pattern_matcher = EnhancedPatternMatcher()        
+        pattern_matcher = EnhancedPatternMatcher()
 
         # Validate patterns if requested
         if needles and validate_patterns:
@@ -157,12 +163,12 @@ class PDFRedactor:
                         page.add_redact_annot(
                             inst, replacement, fill=(1, 1, 1))
 
-                # Only apply redactions if there were matches on this page  
-                if page_matches > 0:  
-                    page.apply_redactions()  
+                # Only apply redactions if there were matches on this page
+                if page_matches > 0:
+                    page.apply_redactions()
                     stats["pages_modified"] += 1
                     # logger.debug(f"Page {page_num + 1}: Applied {page_matches} redactions")
-                
+
                 stats["pages_processed"] += 1
 
                 # if page_matches > 0:
@@ -170,7 +176,13 @@ class PDFRedactor:
                 #         f"Page {page_num + 1}: {page_matches} matches found")
 
             # Save the modified PDF to a temporary file
-            temp_file = f"{self.dest_file}_temp.pdf"
+            # with tempfile.TemporaryDirectory() as tmpdir:
+            #     temp_file = Path(tmpdir) / f"{Path(self.dest_file).stem}_temp.pdf"
+
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                temp_file = tmp.name
+
+            # temp_file = f"{self.dest_file}_temp.pdf"
             doc.save(temp_file)
             logger.debug(
                 f"PDF Redaction Completed. Total matches: {stats['total_matches']}")
@@ -182,7 +194,7 @@ class PDFRedactor:
                     f"PDF compression complete. Final file saved as '{self.dest_file}'.")
 
             # Remove the temporary file
-            os.remove(temp_file)
+            os.unlink(temp_file)
             return stats
 
         except Exception as e:

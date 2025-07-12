@@ -172,6 +172,8 @@ class ArgsProcessor:
 
         # Get all argument attributes from args namespace
         all_args = vars(args)
+        all_args.pop('_explicitly_provided')
+        
         for key, value in all_args.items():
             if (key in explicitly_provided or key not in final_config) and value is not None:
                 final_config[key] = value
