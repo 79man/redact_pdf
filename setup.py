@@ -14,9 +14,17 @@ setup(
         "tqdm",
         "pyyaml"
     ],
+    extras_require={
+        "test": [
+            "pytest>=6.0",
+            "pytest-cov",
+            "pytest-mock"
+        ]
+    },
     entry_points={
         "console_scripts": [
-            "pdf_redacter=pdf_redacter.cli:PdfRedacterCLI.main",  # Register `main` as the CLI entry point
+            # Register `main` as the CLI entry point
+            "pdf_redacter=pdf_redacter.cli:PdfRedacterCLI.main",
         ],
     },
 )
