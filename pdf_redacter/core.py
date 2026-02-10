@@ -17,22 +17,25 @@ logger = logging.getLogger(__name__)
 
 class PDFRedactor:
     def __init__(
-            self,
-            src_file: str,
-            dest_file: str,
-            overwrite: bool = False
+        self,
+        src_file: str,
+        dest_file: str,
+        overwrite: bool = False,
+        skip_redact_failed_pages: bool = False
     ):
         """
         Initialize the PDFRedactor class with file paths and settings.
 
         Args:
-                src_file (str): The input PDF file to process.
-                dest_file (str): The output PDF file path for the redacted version.
-                overwrite (bool): Whether to overwrite the destination file if it already exists.
+            src_file (str): The input PDF file to process.
+            dest_file (str): The output PDF file path for the redacted version.
+            overwrite (bool): Whether to overwrite the destination file if it already exists.
+            skip_redact_failed_pages (bool): Whether to skip any pages that fail redaction from final output.
         """
         self.src_file = src_file
         self.dest_file = dest_file
         self.overwrite = overwrite
+        self.skip_redact_failed_pages = skip_redact_failed_pages
 
         # Validate input and output paths
         self._validate_paths()
@@ -53,12 +56,12 @@ class PDFRedactor:
                 f"Destination file '{self.dest_file}' already exists")
 
     def redact_pdf(
-            self,
-            needles: List[str],
-            replacement: str,
-            ignore_case: bool,
-            predefined_patterns: Optional[List[PatternType]] = None,
-            validate_patterns: bool = True
+        self,
+        needles: List[str],
+        replacement: str,
+        ignore_case: bool,
+        predefined_patterns: Optional[List[PatternType]] = None,
+        validate_patterns: bool = True
     ) -> dict | None:
         """
         Redact text in the PDF file and save the compressed output.
@@ -125,6 +128,7 @@ class PDFRedactor:
             "total_matches": 0,
             "pages_processed": 0,
             "pages_modified": 0,
+            "pages_failed_redaction": 0,
             "patterns_used": len(pattern_info),
             "matches_by_pattern": {}
         }
@@ -133,6 +137,7 @@ class PDFRedactor:
             # Open the PDF
             doc: fitz.Document = fitz.open(self.src_file)
             total_pages = len(doc)  # Get the total number of pages in the PDF
+            failed_redaction_pages = []
 
             # Iterate through pages and search for the text
             for page_num, page in tqdm(
@@ -165,8 +170,14 @@ class PDFRedactor:
 
                 # Only apply redactions if there were matches on this page
                 if page_matches > 0:
-                    page.apply_redactions()
-                    stats["pages_modified"] += 1
+                    try:
+                        page.apply_redactions()
+                        stats["pages_modified"] += 1
+                    except Exception as e:
+                        logger.warning(
+                            f" Error in redacting page {page_num}: {e}")
+                        failed_redaction_pages.append(page_num)
+                        stats["pages_failed_redaction"] += 1
                     # logger.debug(f"Page {page_num + 1}: Applied {page_matches} redactions")
 
                 stats["pages_processed"] += 1
@@ -178,6 +189,13 @@ class PDFRedactor:
             # Save the modified PDF to a temporary file
             # with tempfile.TemporaryDirectory() as tmpdir:
             #     temp_file = Path(tmpdir) / f"{Path(self.dest_file).stem}_temp.pdf"
+
+            if self.skip_redact_failed_pages:
+                # Delete the failed pages from the document (in reverse order to preserve indices)
+                for page_index in sorted(failed_redaction_pages, reverse=True):
+                    doc.delete_page(page_index)
+                if failed_redaction_pages:
+                    logger.debug(f"Removed Redact Failed Page(s) {failed_redaction_pages}")
 
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                 temp_file = tmp.name

@@ -346,7 +346,8 @@ class TestIntegration:
         mock_redactor.assert_called_once_with(
             src_file=str(sample_pdf),
             dest_file=str(output_path),
-            overwrite=True
+            overwrite=True,
+            skip_redact_failed_pages=True
         )
 
         # Verify redact_pdf was called with correct parameters

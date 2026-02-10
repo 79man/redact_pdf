@@ -134,6 +134,8 @@ pdf_redacter --config my_settings.yml -i new_document.pdf -o new_output.pdf
                         Show stats about matched patterns before exit
   --dry-run, --no-dry-run
                         Perform a dry run to validate settings, default=[False]
+  --skip_failed_pages, --no-skip_failed_pages
+                        Remove Failed Redaction Pages from the output PDF, default=[True]
 ```
 
 ### Output

@@ -11,7 +11,7 @@ DEFAULT_IGN_CASE: Final = False
 DEFAULT_VERBOSE: Final = False
 DEFAULT_OVERWRITE: Final = False
 DEFAULT_DRY_RUN: Final = False
-
+DEFAULT_SKIP_FAILED_PAGES: Final = True
 
 class TrackingAction(argparse.Action):
     """Custom action that tracks which arguments were explicitly provided."""
@@ -147,6 +147,13 @@ class ArgsProcessor:
             action=TrackingBooleanAction,  # Use custom action
             default=DEFAULT_DRY_RUN,
             help=f"Perform a dry run to validate settings, default=[{DEFAULT_DRY_RUN}]"
+        )
+
+        parser.add_argument(
+            "--skip_failed_pages",
+            action=TrackingBooleanAction,  # Use custom action
+            default=DEFAULT_SKIP_FAILED_PAGES,
+            help=f"Remove Failed Redaction Pages from the output PDF, default=[{DEFAULT_SKIP_FAILED_PAGES}]"
         )
 
         return parser

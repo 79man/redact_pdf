@@ -79,9 +79,9 @@ class TestEnhancedPatternMatcher:
     def test_add_predefined_pattern_phone(self):  
         """Test adding predefined phone pattern."""  
         matcher = EnhancedPatternMatcher()  
-        matcher.add_predefined_pattern(PatternType.PHONE)  
-          
-        text = "Call (555) 123-4567 or 555.987.6543"  
+        matcher.add_predefined_pattern(PatternType.PHONE)
+
+        text = "Call +91-9877655456 or 080-5544355667"  
         matches = matcher.find_matches(text)  
           
         assert len(matches) >= 1  # Should match at least one phone number  

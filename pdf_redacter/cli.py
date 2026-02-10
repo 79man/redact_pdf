@@ -93,7 +93,8 @@ class PdfRedacterCLI:
             pdf_redactor_engine = PDFRedactor(
                 src_file=str(final_config.get('src_file', None)),
                 dest_file=str(final_config.get('output_file', None)),
-                overwrite=final_config.get('overwrite', False)
+                overwrite=final_config.get('overwrite', False),
+                skip_redact_failed_pages=final_config.get('skip_failed_pages', False)
             )
 
             # Prepare arguments for redact_pdf method
@@ -123,11 +124,11 @@ class PdfRedacterCLI:
                 # Enhanced implementation returns statistics
                 logger.info(f"Redaction completed successfully:")
                 logger.info(f"  - Total matches: {result['total_matches']}")
-                logger.info(
-                    f"  - Pages processed: {result['pages_processed']}")
+                logger.info(f"  - Pages processed: {result['pages_processed']}")
                 logger.info(f"  - Pages modified: {result['pages_modified']}")
-                logger.info(f"  - Patterns used: {result['patterns_used']}")
+                logger.info(f"  - Redact failed Pages: {result['pages_failed_redaction']}")
 
+                logger.info(f"  - Patterns used: {result['patterns_used']}")
                 if result['matches_by_pattern']:
                     logger.info("  - Matches by pattern:")
                     for pattern, count in result['matches_by_pattern'].items():

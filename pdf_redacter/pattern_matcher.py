@@ -31,7 +31,7 @@ class EnhancedPatternMatcher:
         PatternType.PHONE: PatternTemplate(  
             "Phone Number",  
             r"(\+?[0-9]{1,4}[-.\s]?)?([0-9]{3,5})[-.\s]?([0-9]{6,8})",  
-            "Matches US phone numbers in various formats"  
+            "Matches standard phone numbers in various formats"  
         ),  
         PatternType.SSN: PatternTemplate(  
             "Social Security Number",  
